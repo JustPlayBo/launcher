@@ -1,7 +1,14 @@
 {
-  "schema": "boardgame/1",
+  "schema": "boardgame/1.4",
   "id": "whitechapel",
   "name": "Whitechapel \u2014 Stay At Home",
+  "track": true,
+  "counters": [
+    { "id": "night",    "label": "Night",    "glyph": "\ud83c\udf19", "start": 1, "min": 1, "max": 4 },
+    { "id": "move",     "label": "Move",     "glyph": "\ud83d\udc63", "start": 0, "min": 0, "max": 15 },
+    { "id": "carriage", "label": "Carriage", "glyph": "\ud83d\udc0e", "start": 2, "min": 0 },
+    { "id": "alley",    "label": "Alley",    "glyph": "\ud83d\udeaa", "start": 2, "min": 0 }
+  ],
   "description": "The #StayAtHome print-and-play map and its tokens, as a shared table.",
   "board": {
     "image": "../assets/board.jpg",

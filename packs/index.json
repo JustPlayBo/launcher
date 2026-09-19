@@ -24,6 +24,21 @@
       "id": "cards",
       "name": "Card table — open deck",
       "ref": "packs/cards.json"
+    },
+    {
+      "id": "tictactoe",
+      "name": "Tic-Tac-Toe — enforced",
+      "ref": "packs/tictactoe.json"
+    },
+    {
+      "id": "connect4",
+      "name": "Connect Four — enforced",
+      "ref": "packs/connect4.json"
+    },
+    {
+      "id": "gomoku",
+      "name": "Gomoku — enforced",
+      "ref": "packs/gomoku.json"
     }
   ]
 }

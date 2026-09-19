@@ -237,6 +237,21 @@ body {
 .save-badge::before { content: "💾 "; }
 .save-badge.show { opacity: 1; transform: translateY(0); }
 
+/* game-over banner — only enforced packs (with a `logic` block) reach this */
+.rules-banner {
+  position: absolute; left: 50%; top: 18px; transform: translateX(-50%);
+  z-index: 40; max-width: 86vw; text-align: center;
+  font-family: var(--font); font-size: 20px; color: var(--ink);
+  background: linear-gradient(150deg, var(--gold-bright), var(--gold));
+  border: 1px solid #6e4f1f; border-radius: 12px;
+  padding: 10px 22px; letter-spacing: .01em;
+  box-shadow: 0 12px 34px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.4);
+  animation: bannerIn .35s cubic-bezier(.2,.9,.3,1.2);
+}
+.rules-banner::before { content: "🏁 "; }
+.rules-banner.hidden { display: none; }
+@keyframes bannerIn { from { opacity: 0; transform: translate(-50%, -14px) scale(.92); } }
+
 /* ============ tray ============ */
 .tray {
   position: relative; z-index: 30;
@@ -500,3 +515,66 @@ body {
   .tray-item span { display: none; }
   .playaids { max-width: 70vw; }
 }
+
+/* ---- counters: the supplies a player holds rather than places ---------- */
+/* Local to this device and never synced, so they sit apart from the shared
+   dice/deck trays even though they share the play-aids column. */
+.counter-tray {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  background: rgba(30,22,15,.9); border: 1px solid var(--edge);
+  padding: 10px; border-radius: 12px; box-shadow: 0 8px 22px rgba(0,0,0,.5);
+}
+.counter-tray.hidden { display: none; }
+
+.counter {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 7px;
+  background: var(--panel-2); color: var(--sepia);
+  border: 1px solid var(--edge); border-radius: 10px;
+  font-family: var(--font-ui); font-size: 12px;
+}
+.counter-label { display: flex; align-items: center; gap: 4px; }
+.counter-glyph { font-size: 15px; line-height: 1; }
+.counter-name { color: var(--sepia-dim); white-space: nowrap; }
+.counter-value {
+  min-width: 1.6em; text-align: center;
+  font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.counter-btn {
+  width: 22px; height: 22px; padding: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--sepia);
+  border: 1px solid var(--edge); border-radius: 6px;
+  font-family: var(--font-ui); font-size: 14px; line-height: 1;
+  transition: border-color .12s, background .12s;
+}
+.counter-btn:hover:not(:disabled) { border-color: var(--gold); background: #34261a; }
+.counter-btn:active:not(:disabled) { transform: scale(.92); }
+.counter-btn:disabled { opacity: .3; cursor: default; }
+
+.counter-reset {
+  width: 26px; height: 26px; padding: 0; cursor: pointer;
+  background: transparent; color: var(--sepia-dim);
+  border: 1px dashed var(--edge); border-radius: 8px;
+  font-family: var(--font-ui); font-size: 14px;
+}
+.counter-reset:hover { color: var(--sepia); border-color: var(--gold); }
+
+/* a private table is not connected to anything, and shouldn't imply it is */
+.conn-dot.private { background: var(--sepia-dim); box-shadow: 0 0 8px rgba(0,0,0,.4); }
+
+/* ---- track: the recorded route, exportable afterwards ------------------ */
+.track-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  background: rgba(30,22,15,.9); border: 1px solid var(--edge);
+  padding: 8px 10px; border-radius: 12px; box-shadow: 0 8px 22px rgba(0,0,0,.5);
+  font-family: var(--font-ui); font-size: 12px; color: var(--sepia);
+}
+.track-bar.hidden { display: none; }
+.track-label { color: var(--sepia-dim); text-transform: uppercase; letter-spacing: .08em; font-size: 10px; }
+.track-count {
+  min-width: 1.8em; text-align: center; font-weight: 700;
+  font-variant-numeric: tabular-nums; font-size: 14px;
+}
+/* armed = the next move recorded will be marked revealed */
+#trackSurface.armed { border-color: var(--gold); color: var(--gold); background: #34261a; }

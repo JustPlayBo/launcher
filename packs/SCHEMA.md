@@ -18,7 +18,7 @@ omits them behaves exactly as a `boardgame/1` pack. See **Telling players how to
 
 | Field         | Type     | Notes                                              |
 | ------------- | -------- | -------------------------------------------------- |
-| `schema`      | string   | `"boardgame/1"` or `"boardgame/1.1"` (optional, informational) |
+| `schema`      | string   | `"boardgame/1"` … `"boardgame/1.4"` (optional, informational) |
 | `id`          | string   | stable id, used for room sync identity             |
 | `name`        | string   | shown in the lobby, topbar, and menus              |
 | `description` | string   | optional blurb (shown atop the rules drawer)       |
@@ -29,6 +29,8 @@ omits them behaves exactly as a `boardgame/1` pack. See **Telling players how to
 | `context`     | object   | optional — what/when this game is (drawer). See below. |
 | `dice`        | array    | optional — declares a synced dice roller. See below. |
 | `turns`       | object   | optional — a shared "whose turn" indicator. See below. |
+| `counters`    | array    | optional — player-held +/− supplies, local and never synced. See below. |
+| `private`     | bool     | optional — run with no room, no peers and no invite. See below. |
 
 ## Board
 
@@ -260,6 +262,148 @@ The engine enforces nothing: anyone may draw, and a dealt card is just a piece.
 > Drawing calls `forge.cardsapi.com` from the browser, so a deck needs network access
 > (the rest of the engine does not). Without a `cardforge` selector you get the
 > standard 52-card deck; with one you get your CardForge project's rendered cards.
+
+### `counters` — player-held supplies (`boardgame/1.4`)
+
+Small **+/− trackers** for the things a player *holds* rather than places: Mr X's
+tickets, Jack's carriage moves, a blood pool, the night number.
+
+```json
+"counters": [
+  { "id": "night",    "label": "Night",    "glyph": "🌙", "start": 1, "min": 1, "max": 4 },
+  { "id": "carriage", "label": "Carriage", "glyph": "🐎", "start": 2, "min": 0 }
+]
+```
+
+| Field   | Type   | Notes                                                        |
+| ------- | ------ | ------------------------------------------------------------ |
+| `id`    | string | stable key; defaults to `label`, then `counter<i>`            |
+| `label` | string | chip caption                                                  |
+| `glyph` | string | optional unicode/emoji shown before the label                 |
+| `start` | number | starting value (clamped into `min`/`max`); defaults `0`       |
+| `min`   | number | floor, defaults `0`. Pass `null` to allow negatives           |
+| `max`   | number | ceiling, defaults unbounded                                   |
+| `step`  | number | how much each +/− moves, defaults `1`                         |
+| `color` | string | optional chip border tint                                     |
+
+**Counters are never synced.** Dice and turns are shared because the table shares
+them; a counter is *your* supply. In a companion for a hidden-movement game it is
+exactly the state the other players must not see, so values stay on the device, in
+`localStorage`, keyed by room + pack id. The room code therefore doubles as a local
+save slot, and the **↺** button restores every counter to its `start`.
+
+## Private tables — `private` (`boardgame/1.4`)
+
+```json
+"private": true
+```
+
+A private table runs the pack on **one device with nobody attached**: no room to
+join, no invite link, no presence, no cursors, no broker connection at all. It can
+also be requested for any pack with **`?private=1`** in the URL.
+
+This exists for companion play, where the shared display is the *physical board on
+the table* and the only thing the screen needs to hold is the part nobody else may
+see — a hidden mover's position and their remaining supplies. Pieces, board, rules
+drawer, dice and counters all behave exactly as they do in a room; they simply have
+no audience.
+
+The room code is still honoured and still scopes the saved board and counters, so
+two people sharing one device keep separate tables by using different codes.
+
+## Enforced rules — `logic` (`boardgame/1.3`)
+
+Everything above leaves the table **free**: the engine never refuses a move. A
+`logic` block flips that on — the engine (`js/rules.js`) snaps pieces to a grid,
+**refuses illegal moves**, advances turns, and **calls the win**. It's the
+machine-readable counterpart to the human-readable `rules` drawer: `rules` *tells*
+players how to play; `logic` *makes* the board play that way. Packs without `logic`
+are completely unaffected.
+
+> Rules apply to **grid boards only** (a `pattern`, or an explicit `logic.grid`).
+> Map (`lng/lat`) boards have no cells, so `logic` is ignored on them.
+
+```json
+"logic": {
+  "enforce": "strict",
+  "grid":  { "cols": 3, "rows": 3, "snap": true },
+  "turns": { "auto": true },
+  "own":   { "x": "X", "o": "O" },
+  "place": { "legal": "cell.empty && piece.owner == turn", "reason": "Play on your turn." },
+  "win":   [ { "when": "line(3)", "result": "{player} wins!" } ],
+  "draw":  [ { "when": "full()", "result": "Cat's game." } ]
+}
+```
+
+| Field     | Type   | Notes                                                              |
+| --------- | ------ | ----------------------------------------------------------------- |
+| `enforce` | string | `"strict"` (default) refuses illegal moves; `"advisory"` only warns |
+| `grid`    | object | `{ cols, rows, snap, gravity }`. Omit `cols`/`rows` to inherit the board `pattern`'s. `snap` (default `true`) drops pieces to the cell centre. `gravity` `"down"`/`"up"` makes a piece fall to the furthest empty cell in its column (Connect-Four). |
+| `turns`   | object | `{ auto: true }` — auto-advance the shared turn after each legal move. Seats come from the existing top-level `turns.players`. |
+| `own`     | object | maps a piece `type` → the player who owns it. Supports `"prefix*"` wildcards (e.g. `"w*": "White"`). If omitted, a piece is owned by a player whose name equals its `type`. |
+| `place`   | rule   | legality for **adding** a piece from the tray (default: `cell.empty`) |
+| `move`    | rule   | legality for **moving** a placed piece. **Omit to forbid moving** once placed. |
+| `remove`  | rule   | legality for **removing** a piece. **Omit to forbid removal** (clearing the whole board via the menu still works). |
+| `win`     | array  | `[{ when, result }]` — first matching `when` ends the game as a win |
+| `draw`    | array  | `[{ when, result }]` — checked after `win`; ends the game as a draw |
+
+A **rule** (`place`/`move`/`remove`) is either a bare expression string or
+`{ "legal": "<expr>", "reason": "<why a refusal happened>" }`. `result` strings may
+contain `{player}`, replaced with the player who just moved.
+
+### The expression language
+
+`legal`/`when` are written in a tiny **sandboxed** expression language — *not*
+JavaScript. There is no `eval`, no access to any browser/JS global, and property
+reads are blocked from `__proto__`/`constructor`. An expression can only read the
+variables and call the functions the engine provides, so a pack pulled from a URL or
+the shared broker can never run code. The worst a hostile expression can do is be
+wrong.
+
+**Operators:** `== != < > <= >=`, `&& || !`, `+ - * / %`, parentheses, and
+string/number literals.
+
+**Variables** available in `place`/`move`/`remove` `legal`:
+
+| Name          | Meaning                                                      |
+| ------------- | ----------------------------------------------------------- |
+| `turn`        | the current seat's name (from `turns.players`)              |
+| `piece.type`  | the moving piece's `type`                                   |
+| `piece.owner` | its owner (via `own`)                                       |
+| `cell.empty`  | is the **target** cell empty?                              |
+| `cell.owner`  | owner of the piece in the target cell (or `null`)          |
+| `cell.col` / `cell.row` | target cell coordinates                          |
+| `from.*`      | the **origin** cell (same fields), for `move` only          |
+| `board.cols` / `board.rows` | grid dimensions                              |
+
+**Functions** available in `win`/`draw` `when` (they see the whole board; `current`
+is the player who just moved):
+
+| Call                       | Returns                                                  |
+| -------------------------- | ------------------------------------------------------- |
+| `line(n)`                  | is there a run of `n` cells owned by `current`, in any of the four directions (horizontal, vertical, both diagonals)? |
+| `line(n, owner=X)`         | same, for a specific owner                              |
+| `full()`                   | every cell occupied?                                    |
+| `count()` / `count(owner=X)` | number of occupied cells (optionally for one owner)  |
+
+### How enforcement behaves
+
+- **Illegal move** → refused (a ⛔ toast shows `reason`), the piece snaps back, and
+  nothing is broadcast. In `advisory` mode the move is allowed with a ⚠ warning.
+- **Legal move** → the piece snaps to its cell (and falls, under `gravity`), syncs
+  to the room, and — if `turns.auto` — the shared turn advances.
+- **Win / draw** → a banner appears and the board locks; **Menu ▸ Clear the board**
+  resets it for another game. Every peer runs the same deterministic engine over the
+  same board, so everyone sees the same verdict.
+
+> Seats aren't bound to devices — like a real table, anyone *can* reach over and
+> place a piece. `piece.owner == turn` enforces that the **right kind** of piece is
+> played each turn (so X and O genuinely alternate); it doesn't police *who* is
+> sitting in seat X. That's the casual-table trade-off.
+
+Built-in enforced packs to copy from: [`tictactoe.json`](tictactoe.json) (turns +
+win/draw), [`connect4.json`](connect4.json) (gravity), and
+[`gomoku.json`](gomoku.json) (`line(5)` on a 15×15 board).
 
 ## Loading a pack
 

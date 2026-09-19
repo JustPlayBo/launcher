@@ -28,6 +28,16 @@
  *     "dice":    [ { "id":"tesserae", "label":"Tesserae", "sides":6, "count":2 } ],
  *     "turns":   { "players": ["Albus","Ruber"], "track": true },
  *
+ *     // ---- optional ENFORCED rules (additive, boardgame/1.3) ----
+ *     // the machine-readable counterpart to the `rules` drawer above: the engine
+ *     // (js/rules.js) snaps pieces to a grid, polices legal moves and detects
+ *     // wins. Expression strings are run in a sandbox (no eval). See packs/SCHEMA.md.
+ *     "logic":   { "grid": { "cols":3, "rows":3, "snap":true },
+ *                  "own": { "x":"X", "o":"O" },
+ *                  "place": { "legal": "cell.empty && piece.owner == turn" },
+ *                  "win": [ { "when": "line(3)", "result": "{player} wins!" } ],
+ *                  "draw": [ { "when": "full()" } ] },
+ *
  *     // ---- optional card decks (additive, boardgame/1.2) ----
  *     // a CardForge / cardsapi.com (deckofcardsapi-compatible) deck. The engine
  *     // creates a server-side deck, shares its deck_id over MQTT, and draws cards
@@ -40,9 +50,10 @@
  * so a complete game can be authored with zero binary assets. The engine never
  * hard-codes any of this — it just loads, normalises and renders the def.
  *
- * `rules`/`context`/`dice`/`turns` are all OPTIONAL — packs that omit them behave
- * exactly as before (no drawer, no dice tray, no turn chip). The engine still
- * enforces nothing: dice are a synced roller, turns are a shared indicator.
+ * `rules`/`context`/`dice`/`turns`/`logic` are all OPTIONAL — packs that omit them
+ * behave exactly as before (no drawer, no dice tray, no turn chip, no enforcement).
+ * Without `logic` the table is free: dice are a synced roller, turns are a shared
+ * indicator, and nothing is policed. WITH `logic`, the engine enforces it.
  */
 (function (global) {
   'use strict';
@@ -193,6 +204,74 @@
     return { players, track };
   }
 
+  // Player-held supplies (boardgame/1.4): Mr X's tickets, Jack's carriage moves,
+  // a blood pool, a night number. Unlike dice/turns these are never shared —
+  // a counter is your own supply, and in a hidden-movement companion it is
+  // precisely the state the other players must not see. See js/counters.js.
+  function normCounters(c) {
+    if (!Array.isArray(c)) return [];
+    return c.map((x, i) => {
+      if (!x || typeof x !== 'object') return null;
+      const id = str(x.id || x.label || ('counter' + i)) || ('counter' + i);
+      const min = x.min != null ? num(x.min) : 0;      // default floor: can't go negative
+      const max = x.max != null ? num(x.max) : null;   // null = unbounded above
+      let start = num(x.start) || 0;
+      if (min != null) start = Math.max(min, start);
+      if (max != null) start = Math.min(max, start);
+      return {
+        id,
+        label: str(x.label || x.id || ('Counter ' + (i + 1))),
+        glyph: str(x.glyph) || null,
+        start,
+        min,
+        max,
+        step: Math.max(1, (num(x.step) || 1) | 0),
+        color: x.color || null,
+      };
+    }).filter(Boolean);
+  }
+
+  // ENFORCED rules (boardgame/1.3). This is the machine-readable counterpart to
+  // the descriptive `rules` drawer above: a `logic` block makes the engine police
+  // moves and detect wins (see js/rules.js). We only tidy the shape here — the
+  // expression strings stay verbatim and are parsed by the sandbox in rules.js.
+  // A rule (place/move/remove) may be a bare expression string or { legal, reason }.
+  function normRule(r) {
+    if (r == null) return undefined;          // undefined → engine applies its own default
+    if (typeof r === 'string') return { legal: r };
+    if (typeof r === 'object') return { legal: r.legal != null ? str(r.legal) : undefined, reason: str(r.reason) || null };
+    return undefined;
+  }
+  function normConds(arr) {
+    return (Array.isArray(arr) ? arr : []).map((w) => {
+      if (!w || typeof w !== 'object' || w.when == null) return null;
+      return { when: str(w.when), result: w.result != null ? str(w.result) : null };
+    }).filter(Boolean);
+  }
+  function normLogic(L) {
+    if (!L || typeof L !== 'object') return null;
+    const grid = (L.grid && typeof L.grid === 'object') ? {
+      cols: num(L.grid.cols) || null,
+      rows: num(L.grid.rows) || null,
+      snap: L.grid.snap !== false,            // default on
+      gravity: (L.grid.gravity === 'down' || L.grid.gravity === 'up') ? L.grid.gravity : null,
+    } : null;
+    const out = {
+      enforce: L.enforce === 'advisory' ? 'advisory' : 'strict',
+      grid,
+      turns: L.turns ? { auto: L.turns.auto !== false } : null,
+      own: (L.own && typeof L.own === 'object') ? L.own : null,
+      place: normRule(L.place),
+      move: normRule(L.move),
+      remove: normRule(L.remove),
+      win: normConds(L.win),
+      draw: normConds(L.draw),
+    };
+    const meaningful = out.grid || out.own || out.place || out.move || out.remove
+      || out.win.length || out.draw.length;
+    return meaningful ? out : null;
+  }
+
   // a deck drawn from a CardForge / cardsapi.com deckofcardsapi-compatible API.
   //   { id, label, api, cardforge, shuffle, back, cardSize }
   // `cardforge: "org/repo"` selects a custom CardForge project; omit for a
@@ -242,6 +321,11 @@
       id: raw.id || 'untitled',
       name: raw.name || raw.id || 'Untitled board',
       description: raw.description || '',
+      // a private table has no room, no invite and no peers: the physical board
+      // is the shared display, and the screen holds only what must stay hidden.
+      private: raw.private === true,
+      // record the mover's route so it can be exported afterwards (see js/track.js)
+      track: raw.track === true,
       board: {
         image: board.image ? resolveUrl(board.image, baseUrl) : null,
         // a MapLibre style: a URL string (resolved) or an inline style object
@@ -265,6 +349,8 @@
       context: normContext(raw.context, baseUrl),
       dice: normDice(raw.dice),
       turns: normTurns(raw.turns),
+      counters: normCounters(raw.counters),   // player-held supplies — local, never synced
+      logic: normLogic(raw.logic),             // ENFORCED rules — null when absent
       decks: normDecks(raw.decks),
       source: { ref: null, raw },              // filled in by load()
     };

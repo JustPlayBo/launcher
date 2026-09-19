@@ -137,14 +137,117 @@
       net.publishMarker({ id: mid, type: m.type, x, y, t: now, by: name });
     }
 
-    // one callback set, shared by whichever board controller is active
+    // one callback set, shared by whichever board controller is active.
+    // when the pack ships a `logic` block these run through the rule engine:
+    // illegal actions are refused (strict) or flagged (advisory); legal ones may
+    // be snapped to a cell and auto-advance the turn.
     const cb = {
-      onAdd: (type, x, y) => { const m = state.add(type, x, y, name); net.publishMarker(m); },
-      onMove: (mid, x, y) => { const m = state.move(mid, x, y, name); if (m) net.publishMarker(m); },
+      onAdd: (type, x, y) => {
+        const v = verdict({ kind: 'add', type, x, y });
+        if (!v.ok) { toast('⛔ ' + v.reason); return; }
+        const m = state.add(type, v.x, v.y, name);   // → onChange may end the game
+        net.publishMarker(m);
+        recordStep('place', m, type);
+        afterLegalMove();
+      },
+      onMove: (mid, x, y) => {
+        const v = verdict({ kind: 'move', id: mid, x, y });
+        if (!v.ok) { toast('⛔ ' + v.reason); revert(mid); return; }
+        const m = state.move(mid, v.x, v.y, name);
+        if (m) { net.publishMarker(m); recordStep('move', m, m.type); afterLegalMove(); }
+      },
       onLive: (mid, x, y) => liveMove(mid, x, y),
-      onRemove: (mid) => { if (state.remove(mid)) net.deleteMarker(mid); },
+      onRemove: (mid) => {
+        const v = verdict({ kind: 'remove', id: mid });
+        if (!v.ok) { toast('⛔ ' + v.reason); revert(mid); return; }
+        if (state.remove(mid)) {
+          net.deleteMarker(mid);
+          if (tracker) { tracker.record('remove', { piece: mid }); refreshTrack(); }
+        }
+      },
       onCursor: (x, y) => net.publishCursor(x, y),
     };
+
+    // A recorded step. Positions are secret unless the mover surfaced, which is
+    // what `Surface` arms. `node`/`via` stay empty until graph boards land — a
+    // free-drag board has coordinates but no notion of a connection.
+    function recordStep(kind, m, type) {
+      if (!tracker || !tracker.enabled || !m) return;
+      const step = { piece: m.id, type, x: m.x, y: m.y };
+      if (surfaceNext) { step.reveal = true; armSurface(false); }
+      tracker.record(kind, step);
+      refreshTrack();
+    }
+
+    /* ---- rule enforcement (no-ops unless the pack declares `logic`) ---- */
+    let ruleset = null;       // compiled from def.logic by applyGame()
+    let gameOver = false;
+
+    // the seat whose turn it is, read from the shared turn indicator
+    function turnSeat() {
+      const ps = currentDef && currentDef.turns && currentDef.turns.players;
+      if (!ps || !ps.length) return null;
+      const i = extras ? (extras.turnIdx || 0) : 0;
+      return ps[((i % ps.length) + ps.length) % ps.length];
+    }
+
+    // judge a proposed action. Returns { ok, reason?, x?, y? } with x/y snapped on
+    // success. Fails open if the engine itself errors so a bad rule can't brick play.
+    function verdict(action) {
+      if (!ruleset) return { ok: true, x: action.x, y: action.y };
+      if (gameOver) return { ok: false, reason: 'Game over — clear the board to play again.' };
+      let v;
+      try { v = ruleset.validate(action, { markers: state.all(), turn: turnSeat() }); }
+      catch (e) { return { ok: true, x: action.x, y: action.y }; }
+      if (!v.ok && ruleset.enforce === 'advisory') {
+        toast('⚠ ' + (v.reason || 'Unusual move'));
+        return { ok: true, x: action.x, y: action.y };
+      }
+      return v;
+    }
+
+    // put a rejected piece back where it was (we never committed the move). Runs on
+    // a microtask so the board's in-flight pointer gesture has ended first —
+    // otherwise board.upsert ignores the element it thinks is still being dragged.
+    function revert(mid) {
+      Promise.resolve().then(() => { const m = state.get(mid); if (m && board) board.upsert(m); });
+    }
+
+    // after a legal local move, auto-advance the shared turn (unless we just won)
+    function afterLegalMove() {
+      if (gameOver) return;
+      if (ruleset && ruleset.turns && ruleset.turns.auto && currentDef && currentDef.turns && extras) {
+        extras.nextTurn();
+      }
+    }
+
+    // incremental win/draw test, run for every board change (local or remote). The
+    // "mover" is the owner of the piece that just landed — that's whose line counts.
+    function checkOutcome(m) {
+      if (!ruleset || gameOver) return;
+      const mover = m ? ruleset.ownerOf(m.type) : null;
+      let r; try { r = ruleset.outcome(state.all(), mover); } catch (e) { return; }
+      if (r && r.over) { gameOver = true; showBanner(r.result); toast('🏁 ' + r.result); }
+    }
+
+    // evaluate a whole position at once (e.g. a finished game replayed from disk on
+    // a late join) — try each seat for a win before concluding a draw.
+    function checkOutcomeAll() {
+      if (!ruleset || gameOver) return;
+      const ps = (currentDef && currentDef.turns && currentDef.turns.players) || [];
+      const seats = ps.length ? ps.slice() : [null];
+      let draw = null;
+      for (const seat of seats) {
+        let r; try { r = ruleset.outcome(state.all(), seat); } catch (e) { return; }
+        if (!r || !r.over) continue;
+        if (r.win) { gameOver = true; showBanner(r.result); return; }
+        draw = r;
+      }
+      if (draw) { gameOver = true; showBanner(draw.result); }
+    }
+
+    function resetOutcome() { gameOver = false; const b = $('rulesBanner'); if (b) { b.classList.add('hidden'); b.textContent = ''; } }
+    function showBanner(text) { const b = $('rulesBanner'); if (b) { b.textContent = text; b.classList.remove('hidden'); } }
 
     // pick the right controller for the pack: a MapLibre map, or the DOM board
     let board = null, boardKind = null;
@@ -159,9 +262,10 @@
     state.onChange((kind, m) => {
       if (!board) return;
       if (kind === 'saved') { flashSave(); return; }
-      if (kind === 'clear') { board.renderAll([]); return; }
+      if (kind === 'clear') { board.renderAll([]); resetOutcome(); return; }
       if (kind === 'remove') { board.removeEl(m.id); return; }
       if (m) board.upsert(m);
+      if (kind === 'add' || kind === 'move') checkOutcome(m);   // local OR remote
     });
 
     /* ---- the game pack the room is running ---- */
@@ -169,25 +273,45 @@
     let roomGameKnown = false;
     let extras = null;                       // RoomExtras — created once net exists
     let decks = null;                        // DeckManager — created once net exists
+    let counters = null;                     // CounterTray — local only, so it needs no net
+    let tracker = null;                      // TrackRecorder — the mover's route
+    let surfaceNext = false;                 // arm the next move as revealed
 
     async function applyGame(def) {
       ensureController(def);
       currentDef = def;
+      ruleset = compileRules(def);          // null unless the pack declares `logic`
+      resetOutcome();
       await board.setDef(def);              // MapBoard.setDef is async (loads MapLibre)
       buildTray(def, board);
       $('gameName').textContent = def.name;
+      // when the engine auto-advances turns, the manual "Next ▸" button is redundant
+      const tn = $('turnNext');
+      if (tn) tn.classList.toggle('hidden', !!(ruleset && ruleset.turns && ruleset.turns.auto));
       if (extras) extras.setDef(def);       // rules drawer / dice / turn for this pack
       if (decks) decks.setDef(def);         // card decks for this pack
+      if (counters) counters.setDef(def);   // player-held supplies for this pack
+      if (tracker) { tracker.setDef(def, counters && counters.snapshot()); refreshTrack(); }
       board.renderAll(state.all());
       board.fit();
+      checkOutcomeAll();                     // a replayed/persisted position may already be finished
     }
 
-    // show the floating play-aids panel if any of turn / dice / decks is active
+    // compile def.logic into an enforcement ruleset; disable (and say so) on error
+    function compileRules(def) {
+      if (!window.Rules) return null;
+      try { return window.Rules.compile(def); }
+      catch (e) { toast('Rules disabled: ' + e.message); return null; }
+    }
+
+    // show the floating play-aids panel if any of turn / dice / decks / counters / track is active
     function refreshAids() {
       const pa = $('playaids');
       const has = !$('turnBar').classList.contains('hidden')
         || !$('diceTray').classList.contains('hidden')
-        || !$('deckTray').classList.contains('hidden');
+        || !$('deckTray').classList.contains('hidden')
+        || !$('counterTray').classList.contains('hidden')
+        || !$('trackBar').classList.contains('hidden');
       pa.classList.toggle('hidden', !has);
     }
     async function loadAndApply(input, opts) {
@@ -200,6 +324,46 @@
       return def;
     }
 
+    // Counters need no network, so unlike extras/decks they can exist before the
+    // first pack is applied — the room code doubles as the local save slot.
+    counters = new window.CounterTray({ tray: $('counterTray') },
+      { slot: room, toast, onAids: refreshAids,
+        // a counter move is part of the story: spending a ticket, turning a night
+        onChange: (c, from, to) => {
+          if (tracker) { tracker.record('counter', { id: c.id, label: c.label, from, to }); refreshTrack(); }
+        } });
+
+    tracker = new window.TrackFmt.TrackRecorder({ slot: room, recorder: { name } });
+
+    function refreshTrack() {
+      const on = !!(tracker && tracker.enabled && tracker.track);
+      $('trackBar').classList.toggle('hidden', !on);
+      if (on) $('trackCount').textContent = String(tracker.track.moveCount);
+      refreshAids();
+    }
+
+    function armSurface(on) {
+      surfaceNext = on;
+      $('trackSurface').classList.toggle('armed', on);
+    }
+    $('trackSurface').onclick = () => armSurface(!surfaceNext);
+    $('trackExport').onclick = () => {
+      if (!tracker || !tracker.track) return;
+      toast('Exported ' + window.TrackFmt.download(tracker.track));
+    };
+    $('trackPublic').onclick = () => {
+      if (!tracker || !tracker.track) return;
+      toast('Exported ' + window.TrackFmt.download(tracker.track, { publicOnly: true }));
+    };
+    $('trackNew').onclick = () => {
+      if (!tracker || !tracker.enabled) return;
+      tracker.reset(counters && counters.snapshot());
+      armSurface(false);
+      refreshTrack();
+      toast('Started a new track');
+    };
+
+
     // load the chosen pack (fall back to the first built-in on failure)
     try { await loadAndApply(choice); }
     catch (e) { toast('Pack failed (' + e.message + ') — using default'); await loadAndApply(FALLBACK_PACKS[0].ref); }
@@ -207,7 +371,16 @@
     const players = new Map();
     players.set(id, { name, color: identity.color, self: true });
 
-    const net = new window.Net(room, identity, {
+    // A private table skips the broker entirely — no room, no peers, no invite.
+    // Requested with ?private=1, or declared by the pack itself.
+    const isPrivate = params.get('private') === '1' || !!(currentDef && currentDef.private);
+    if (isPrivate) {
+      document.body.classList.add('is-private');
+      $('copyLinkBtn').classList.add('hidden');   // there is nobody to invite
+      $('roomCode').title = 'Local save slot — this table is not shared';
+    }
+    const NetClass = isPrivate ? window.PrivateNet : window.Net;
+    const net = new NetClass(room, identity, {
       onStatus: setStatus,
       onGame: (payload) => onRoomGame(payload),
       onMarker: (m) => { if (!board.isDragging(m.id)) state.applyRemote(m); },
@@ -378,7 +551,8 @@
   /* ---------------- status / toast / save ---------------- */
   function setStatus(s) {
     const dot = $('connDot');
-    const map = { online: ['on', 'Connected — live'], reconnecting: ['warn', 'Reconnecting…'], offline: ['off', 'Offline'], error: ['off', 'Connection error'] };
+    const map = { online: ['on', 'Connected — live'], reconnecting: ['warn', 'Reconnecting…'], offline: ['off', 'Offline'], error: ['off', 'Connection error'],
+                  private: ['private', 'Private table — nothing leaves this device'] };
     const [cls, tip] = map[s] || ['off', s];
     dot.className = 'conn-dot ' + cls; dot.title = tip;
     if (s === 'online') toast('Connected to room');

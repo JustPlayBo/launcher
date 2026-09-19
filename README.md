@@ -45,6 +45,20 @@ be authored with **zero binary assets** (pattern/map board + glyph pieces).
   Numeric dice **tumble in 3D** ([`@3d-dice/dice-box`](https://github.com/3d-dice/dice-box),
   self-hosted in `lib/dice-box/` — no runtime CDN) when WebGL is available, and fall
   back to an instant roll otherwise — the settled physics value is what gets broadcast.
+- **Player-held supplies** *(opt-in, per pack)* — a `counters` block gives +/−
+  chips for the things a player *holds* rather than places: Mr X's tickets,
+  Jack's carriage moves, a night number. Unlike dice and turns these are
+  **never synced** — a counter is your own supply, kept on your device.
+  → [`packs/SCHEMA.md`](packs/SCHEMA.md)
+- **Private tables** *(`"private": true`, or `?private=1`)* — run a pack with
+  **no room, no invite and no broker connection at all**. For companion play,
+  where the shared display is the physical board on the table and the screen
+  only holds what nobody else may see. The room code becomes a local save slot.
+- **Tracks** *(opt-in, per pack)* — record the hidden mover's route as it
+  happens and export it afterwards as JSON, either in full for the reveal or as
+  the **public projection** of what opponents could legitimately see. Given a
+  board graph, an exported track can be re-walked to check every step was
+  connected. → [`TRACK.md`](TRACK.md)
 - **Card decks** *(opt-in, per pack)* — a `decks` block deals from a
   [cardsapi.com](https://forge.cardsapi.com) / deckofcardsapi-compatible API
   (standard 52, or your own **CardForge** project via `cardforge: "org/repo"`). The
