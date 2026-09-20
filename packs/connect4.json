@@ -2,29 +2,72 @@
   "schema": "boardgame/1.3",
   "id": "connect4",
   "name": "Connect Four — enforced",
+  "bgg": 2719,
   "description": "Drop discs into a 7×6 grid; they fall to the lowest free slot in the column. First to line up four — in any direction — wins. The engine handles gravity, turns and the win.",
   "board": {
-    "pattern": { "type": "checker", "cols": 7, "rows": 6, "light": "#2a5390", "dark": "#244a81", "bg": "#10243f" },
+    "pattern": {
+      "type": "checker",
+      "cols": 7,
+      "rows": 6,
+      "light": "#2a5390",
+      "dark": "#244a81",
+      "bg": "#10243f"
+    },
     "aspect": 1.1667,
     "color": "#0c1a2e",
     "pieceSize": 0.12
   },
   "pieces": [
-    { "type": "r", "label": "Red", "glyph": "", "bg": "#d23b3b" },
-    { "type": "y", "label": "Yellow", "glyph": "", "bg": "#e8c33a" }
+    {
+      "type": "r",
+      "label": "Red",
+      "glyph": "",
+      "bg": "#d23b3b"
+    },
+    {
+      "type": "y",
+      "label": "Yellow",
+      "glyph": "",
+      "bg": "#e8c33a"
+    }
   ],
-  "turns": { "players": ["Red", "Yellow"] },
+  "turns": {
+    "players": [
+      "Red",
+      "Yellow"
+    ]
+  },
   "logic": {
     "enforce": "strict",
-    "grid": { "cols": 7, "rows": 6, "snap": true, "gravity": "down" },
-    "turns": { "auto": true },
-    "own": { "r": "Red", "y": "Yellow" },
+    "grid": {
+      "cols": 7,
+      "rows": 6,
+      "snap": true,
+      "gravity": "down"
+    },
+    "turns": {
+      "auto": true
+    },
+    "own": {
+      "r": "Red",
+      "y": "Yellow"
+    },
     "place": {
       "legal": "piece.owner == turn",
       "reason": "Drop your own colour, on your turn — pick a column that isn't full."
     },
-    "win": [ { "when": "line(4)", "result": "{player} connects four!" } ],
-    "draw": [ { "when": "full()", "result": "Board full — a draw." } ]
+    "win": [
+      {
+        "when": "line(4)",
+        "result": "{player} connects four!"
+      }
+    ],
+    "draw": [
+      {
+        "when": "full()",
+        "result": "Board full — a draw."
+      }
+    ]
   },
   "rules": {
     "objective": "Be first to get four of your discs in a row — horizontally, vertically, or diagonally.",

@@ -31,6 +31,7 @@ omits them behaves exactly as a `boardgame/1` pack. See **Telling players how to
 | `turns`       | object   | optional — a shared "whose turn" indicator. See below. |
 | `counters`    | array    | optional — player-held +/− supplies, local and never synced. See below. |
 | `private`     | bool     | optional — run with no room, no peers and no invite. See below. |
+| `bgg`         | number   | optional — BoardGameGeek id of the game this pack implements |
 
 ## Board
 
@@ -262,6 +263,19 @@ The engine enforces nothing: anyone may draw, and a dealt card is just a piece.
 > Drawing calls `forge.cardsapi.com` from the browser, so a deck needs network access
 > (the rest of the engine does not). Without a `cardforge` selector you get the
 > standard 52-card deck; with one you get your CardForge project's rendered cards.
+
+### `bgg` — the game this pack implements (`boardgame/1.4`)
+
+```json
+"bgg": 438
+```
+
+The [BoardGameGeek](https://boardgamegeek.com) id of the published game a pack
+implements, so a collection elsewhere can find its playable counterpart here.
+Three Scotland Yard board variants all carry `438` — one game, three packs.
+
+Omit it for packs that aren't one published game: an open card table, a world
+map. A pack without `bgg` simply never matches anything.
 
 ### `counters` — player-held supplies (`boardgame/1.4`)
 

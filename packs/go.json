@@ -1,8 +1,9 @@
 {
   "schema": "boardgame/1",
   "id": "go",
-  "name": "Go \u2014 19\u00d719 goban",
-  "description": "A 19\u00d719 goban with black and white stones. Place stones anywhere; no capture rules.",
+  "name": "Go — 19×19 goban",
+  "bgg": 188,
+  "description": "A 19×19 goban with black and white stones. Place stones anywhere; no capture rules.",
   "board": {
     "pattern": {
       "type": "grid",

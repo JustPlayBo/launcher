@@ -2,6 +2,7 @@
   "schema": "boardgame/1.4",
   "id": "scotlandyard-original",
   "name": "Scotland Yard — original board",
+  "bgg": 438,
   "description": "The illustrated Ravensburger board as printed — handsome, and harder to read at speed.",
   "track": true,
   "board": {

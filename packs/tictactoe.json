@@ -2,29 +2,71 @@
   "schema": "boardgame/1.3",
   "id": "tictactoe",
   "name": "Tic-Tac-Toe — enforced",
+  "bgg": 11901,
   "description": "Three in a row wins. Unlike a free table, the engine enforces this one: it only lets you place your own mark, only on your turn, only on an empty square — and it calls the win.",
   "board": {
-    "pattern": { "type": "checker", "cols": 3, "rows": 3, "light": "#efe2c4", "dark": "#e4d3ac", "bg": "#1a130c" },
+    "pattern": {
+      "type": "checker",
+      "cols": 3,
+      "rows": 3,
+      "light": "#efe2c4",
+      "dark": "#e4d3ac",
+      "bg": "#1a130c"
+    },
     "aspect": 1,
     "color": "#140e09",
     "pieceSize": 0.2
   },
   "pieces": [
-    { "type": "x", "label": "X", "glyph": "✕", "color": "#c0392b" },
-    { "type": "o", "label": "O", "glyph": "◯", "color": "#2c5aa0" }
+    {
+      "type": "x",
+      "label": "X",
+      "glyph": "✕",
+      "color": "#c0392b"
+    },
+    {
+      "type": "o",
+      "label": "O",
+      "glyph": "◯",
+      "color": "#2c5aa0"
+    }
   ],
-  "turns": { "players": ["X", "O"] },
+  "turns": {
+    "players": [
+      "X",
+      "O"
+    ]
+  },
   "logic": {
     "enforce": "strict",
-    "grid": { "cols": 3, "rows": 3, "snap": true },
-    "turns": { "auto": true },
-    "own": { "x": "X", "o": "O" },
+    "grid": {
+      "cols": 3,
+      "rows": 3,
+      "snap": true
+    },
+    "turns": {
+      "auto": true
+    },
+    "own": {
+      "x": "X",
+      "o": "O"
+    },
     "place": {
       "legal": "cell.empty && piece.owner == turn",
       "reason": "Play your own mark, on an empty square, on your turn."
     },
-    "win": [ { "when": "line(3)", "result": "{player} wins!" } ],
-    "draw": [ { "when": "full()", "result": "Cat's game — a draw." } ]
+    "win": [
+      {
+        "when": "line(3)",
+        "result": "{player} wins!"
+      }
+    ],
+    "draw": [
+      {
+        "when": "full()",
+        "result": "Cat's game — a draw."
+      }
+    ]
   },
   "rules": {
     "objective": "Be first to line up three of your marks — across, down, or diagonally.",

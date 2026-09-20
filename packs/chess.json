@@ -1,32 +1,42 @@
 {
   "schema": "boardgame/1.1",
   "id": "chess",
-  "name": "Chess \u2014 open table",
-  "description": "A checkerboard and the 12 chess pieces as unicode glyphs. No rules enforced \u2014 move freely.",
+  "name": "Chess — open table",
+  "bgg": 171,
+  "description": "A checkerboard and the 12 chess pieces as unicode glyphs. No rules enforced — move freely.",
   "context": {
-    "period": "Gupta India, c. 600 CE \u2192 the world",
-    "blurb": "Chess descends from cha\u1e6dura\u1e45ga, a 6th-century Indian game of four army divisions \u2014 infantry, cavalry, elephants and chariots \u2014 that became the pawn, knight, bishop and rook. It reached Persia as sh\u012b\u1e45 (whence \u2018check\u2019), then Europe through the Islamic world, settling into the modern moves around 1475.",
+    "period": "Gupta India, c. 600 CE → the world",
+    "blurb": "Chess descends from chaṭuraṅga, a 6th-century Indian game of four army divisions — infantry, cavalry, elephants and chariots — that became the pawn, knight, bishop and rook. It reached Persia as shīṅ (whence ‘check’), then Europe through the Islamic world, settling into the modern moves around 1475.",
     "links": [
-      { "label": "Chess \u2014 Wikipedia", "url": "https://en.wikipedia.org/wiki/Chess" }
+      {
+        "label": "Chess — Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Chess"
+      }
     ]
   },
   "rules": {
-    "objective": "Checkmate the opposing king \u2014 attack it so that it cannot escape capture.",
+    "objective": "Checkmate the opposing king — attack it so that it cannot escape capture.",
     "players": "2",
-    "duration": "10\u201360 min",
-    "setup": "Each side starts with eight pawns on the second rank and the back rank set rook, knight, bishop, queen, king, bishop, knight, rook \u2014 the white queen on a light square. Use \u2018Load sample layout\u2019 to drop the opening position.",
+    "duration": "10–60 min",
+    "setup": "Each side starts with eight pawns on the second rank and the back rank set rook, knight, bishop, queen, king, bishop, knight, rook — the white queen on a light square. Use ‘Load sample layout’ to drop the opening position.",
     "howToPlay": [
       "White moves first; players then alternate, one piece per turn.",
       "Each piece moves its own way: rooks in straight lines, bishops diagonally, the queen both, knights in an L, the king one square, pawns forward (capturing diagonally).",
-      "Capture by moving onto an enemy piece and removing it (drag it to the \ud83d\uddd1\ufe0f)."
+      "Capture by moving onto an enemy piece and removing it (drag it to the 🗑️)."
     ],
-    "winning": "Checkmate ends the game. A position with no legal move and no check is stalemate \u2014 a draw.",
+    "winning": "Checkmate ends the game. A position with no legal move and no check is stalemate — a draw.",
     "variants": [
       "Chess960 (Fischer random): shuffle the back rank.",
       "Blitz: agree a short time per side and use the turn indicator to keep pace."
     ]
   },
-  "turns": { "players": ["White", "Black"], "track": true },
+  "turns": {
+    "players": [
+      "White",
+      "Black"
+    ],
+    "track": true
+  },
   "board": {
     "pattern": {
       "type": "checker",
@@ -43,73 +53,73 @@
     {
       "type": "wk",
       "label": "White King",
-      "glyph": "\u265a",
+      "glyph": "♚",
       "color": "#f6f2e7"
     },
     {
       "type": "wq",
       "label": "White Queen",
-      "glyph": "\u265b",
+      "glyph": "♛",
       "color": "#f6f2e7"
     },
     {
       "type": "wr",
       "label": "White Rook",
-      "glyph": "\u265c",
+      "glyph": "♜",
       "color": "#f6f2e7"
     },
     {
       "type": "wb",
       "label": "White Bishop",
-      "glyph": "\u265d",
+      "glyph": "♝",
       "color": "#f6f2e7"
     },
     {
       "type": "wn",
       "label": "White Knight",
-      "glyph": "\u265e",
+      "glyph": "♞",
       "color": "#f6f2e7"
     },
     {
       "type": "wp",
       "label": "White Pawn",
-      "glyph": "\u265f",
+      "glyph": "♟",
       "color": "#f6f2e7"
     },
     {
       "type": "bk",
       "label": "Black King",
-      "glyph": "\u265a",
+      "glyph": "♚",
       "color": "#22201c"
     },
     {
       "type": "bq",
       "label": "Black Queen",
-      "glyph": "\u265b",
+      "glyph": "♛",
       "color": "#22201c"
     },
     {
       "type": "br",
       "label": "Black Rook",
-      "glyph": "\u265c",
+      "glyph": "♜",
       "color": "#22201c"
     },
     {
       "type": "bb",
       "label": "Black Bishop",
-      "glyph": "\u265d",
+      "glyph": "♝",
       "color": "#22201c"
     },
     {
       "type": "bn",
       "label": "Black Knight",
-      "glyph": "\u265e",
+      "glyph": "♞",
       "color": "#22201c"
     },
     {
       "type": "bp",
       "label": "Black Pawn",
-      "glyph": "\u265f",
+      "glyph": "♟",
       "color": "#22201c"
     }
   ],

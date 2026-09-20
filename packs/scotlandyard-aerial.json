@@ -2,6 +2,7 @@
   "schema": "boardgame/1.4",
   "id": "scotlandyard-aerial",
   "name": "Scotland Yard — satellite",
+  "bgg": 438,
   "description": "A satellite rendering of the same network, with the starting stations listed along every edge so each seat can read them upright.",
   "track": true,
   "board": {

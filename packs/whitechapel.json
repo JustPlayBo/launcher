@@ -1,13 +1,40 @@
 {
   "schema": "boardgame/1.4",
   "id": "whitechapel",
-  "name": "Whitechapel \u2014 Stay At Home",
+  "name": "Whitechapel — Stay At Home",
+  "bgg": 59959,
   "track": true,
   "counters": [
-    { "id": "night",    "label": "Night",    "glyph": "\ud83c\udf19", "start": 1, "min": 1, "max": 4 },
-    { "id": "move",     "label": "Move",     "glyph": "\ud83d\udc63", "start": 0, "min": 0, "max": 15 },
-    { "id": "carriage", "label": "Carriage", "glyph": "\ud83d\udc0e", "start": 2, "min": 0 },
-    { "id": "alley",    "label": "Alley",    "glyph": "\ud83d\udeaa", "start": 2, "min": 0 }
+    {
+      "id": "night",
+      "label": "Night",
+      "glyph": "🌙",
+      "start": 1,
+      "min": 1,
+      "max": 4
+    },
+    {
+      "id": "move",
+      "label": "Move",
+      "glyph": "👣",
+      "start": 0,
+      "min": 0,
+      "max": 15
+    },
+    {
+      "id": "carriage",
+      "label": "Carriage",
+      "glyph": "🐎",
+      "start": 2,
+      "min": 0
+    },
+    {
+      "id": "alley",
+      "label": "Alley",
+      "glyph": "🚪",
+      "start": 2,
+      "min": 0
+    }
   ],
   "description": "The #StayAtHome print-and-play map and its tokens, as a shared table.",
   "board": {
@@ -34,37 +61,37 @@
     },
     {
       "type": "cop-green",
-      "label": "Constable \u00b7 Green",
+      "label": "Constable · Green",
       "image": "../assets/markers/cop-green.png"
     },
     {
       "type": "cop-yellow",
-      "label": "Constable \u00b7 Yellow",
+      "label": "Constable · Yellow",
       "image": "../assets/markers/cop-yellow.png"
     },
     {
       "type": "cop-teal",
-      "label": "Constable \u00b7 Teal",
+      "label": "Constable · Teal",
       "image": "../assets/markers/cop-teal.png"
     },
     {
       "type": "cop-brown",
-      "label": "Constable \u00b7 Brown",
+      "label": "Constable · Brown",
       "image": "../assets/markers/cop-brown.png"
     },
     {
       "type": "disc-red",
-      "label": "Disc \u00b7 Red",
+      "label": "Disc · Red",
       "image": "../assets/markers/disc-red.png"
     },
     {
       "type": "disc-yellow",
-      "label": "Disc \u00b7 Yellow",
+      "label": "Disc · Yellow",
       "image": "../assets/markers/disc-yellow.png"
     },
     {
       "type": "disc-grey",
-      "label": "Disc \u00b7 Grey",
+      "label": "Disc · Grey",
       "image": "../assets/markers/disc-grey.png"
     }
   ],

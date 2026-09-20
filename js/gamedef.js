@@ -326,6 +326,10 @@
       private: raw.private === true,
       // record the mover's route so it can be exported afterwards (see js/track.js)
       track: raw.track === true,
+      // the BoardGameGeek id of the game this pack implements, so a collection
+      // can find its playable counterpart here. Null for packs that aren't one
+      // published game (an open card table, a world map).
+      bgg: (function (v) { const n = parseInt(v, 10); return isFinite(n) && n > 0 ? n : null; })(raw.bgg),
       board: {
         image: board.image ? resolveUrl(board.image, baseUrl) : null,
         // a MapLibre style: a URL string (resolved) or an inline style object

@@ -2,6 +2,7 @@
   "schema": "boardgame/1.4",
   "id": "scotlandyard",
   "name": "Scotland Yard",
+  "bgg": 438,
   "description": "The hunt for Mr X across 199 London stations. The clearest of the three boards — easiest to read a station number from across the table.",
   "track": true,
   "board": {
