@@ -1,0 +1,151 @@
+{
+  "schema": "boardgame/1.4",
+  "id": "scotlandyard-aerial",
+  "name": "Scotland Yard — satellite",
+  "description": "A satellite rendering of the same network, with the starting stations listed along every edge so each seat can read them upright.",
+  "track": true,
+  "board": {
+    "image": "../assets/scotland_yard_aerial.jpg",
+    "aspect": 1.27472,
+    "color": "#0b1733",
+    "pieceSize": 0.024
+  },
+  "pieces": [
+    {
+      "type": "mrx",
+      "label": "Mr X",
+      "glyph": "X",
+      "color": "#f4efe4",
+      "bg": "#15130f"
+    },
+    {
+      "type": "det-red",
+      "label": "Detective · Red",
+      "glyph": "♟",
+      "color": "#c0392b"
+    },
+    {
+      "type": "det-yellow",
+      "label": "Detective · Yellow",
+      "glyph": "♟",
+      "color": "#d4a017"
+    },
+    {
+      "type": "det-green",
+      "label": "Detective · Green",
+      "glyph": "♟",
+      "color": "#27795b"
+    },
+    {
+      "type": "det-blue",
+      "label": "Detective · Blue",
+      "glyph": "♟",
+      "color": "#2c6fb5"
+    },
+    {
+      "type": "det-purple",
+      "label": "Detective · Purple",
+      "glyph": "♟",
+      "color": "#7d4b9a"
+    },
+    {
+      "type": "lastseen",
+      "label": "Last seen",
+      "glyph": "◎",
+      "color": "#f4efe4",
+      "bg": "#8b1d1d"
+    }
+  ],
+  "counters": [
+    {
+      "id": "move",
+      "label": "Move",
+      "glyph": "🕐",
+      "start": 0,
+      "min": 0,
+      "max": 24
+    },
+    {
+      "id": "taxi",
+      "label": "Taxi",
+      "glyph": "🚕",
+      "start": 10,
+      "min": 0
+    },
+    {
+      "id": "bus",
+      "label": "Bus",
+      "glyph": "🚌",
+      "start": 8,
+      "min": 0
+    },
+    {
+      "id": "tube",
+      "label": "Underground",
+      "glyph": "🚇",
+      "start": 4,
+      "min": 0
+    },
+    {
+      "id": "black",
+      "label": "Black",
+      "glyph": "⬛",
+      "start": 5,
+      "min": 0
+    },
+    {
+      "id": "double",
+      "label": "Double",
+      "glyph": "⏩",
+      "start": 2,
+      "min": 0
+    }
+  ],
+  "turns": {
+    "players": [
+      "Mr X",
+      "Red",
+      "Yellow",
+      "Green",
+      "Blue",
+      "Purple"
+    ],
+    "track": true
+  },
+  "rules": {
+    "objective": "Mr X must survive 24 moves across London. The detectives must land on his station before he does.",
+    "players": "2–6 (Mr X plus up to five detectives)",
+    "duration": "45–60 min",
+    "setup": "Deal one starting station to each player from the 18 marked on the board: 13, 26, 29, 34, 50, 53, 91, 94, 103, 112, 117, 132, 138, 141, 155, 174, 197, 198. Detectives take 10 taxi, 8 bus and 4 underground tickets; Mr X takes 5 black tickets and 2 double-move cards.",
+    "howToPlay": [
+      "Mr X moves first, in secret, writing the station on his travel log and covering it with the ticket he used.",
+      "He announces only the transport — taxi, bus or underground — never the station.",
+      "Each detective then moves along a connection of their choice, spending a ticket of that type.",
+      "A detective with no usable ticket must pass; detectives may never share a station.",
+      "Spent detective tickets go to Mr X, so bump his Taxi/Bus/Underground counters up as he receives them — he starts those at 0.",
+      "A black ticket hides which transport Mr X used and is the only way to take the river ferry.",
+      "A double-move card lets Mr X take two moves in one turn.",
+      "Mr X surfaces on moves 3, 8, 13, 18, 24 — he reveals his station, so drop the ◎ Last seen marker there."
+    ],
+    "winning": "The detectives win the moment one of them ends a move on Mr X's station. Mr X wins if he is still free after move 24, or if every detective is stuck without a usable ticket.",
+    "variants": [
+      "Fewer than five detectives: deal the spare colours out of play and give each remaining detective their full ticket allowance.",
+      "Two players: one detective is harsh — try three detectives run by one person instead."
+    ]
+  },
+  "context": {
+    "period": "London — Ravensburger, 1983",
+    "blurb": "A hunt across the London transport network, and the game that made hidden movement a genre. It was designed by a team of six — Werner Scheerer, Wolf Hoermann, Fritz Ifland, Werner Schlegel, Manfred Burggraf and Dorothy Garrels — and took the very first Spiel des Jahres in 1983. Every station on the board is a real place: the 199 numbered circles map onto London's actual taxi ranks, bus routes and Underground lines, which is why the shape of the network feels so awkward and so fair at once.",
+    "links": [
+      {
+        "label": "Scotland Yard — Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Scotland_Yard_(board_game)"
+      },
+      {
+        "label": "Scotland Yard — BoardGameGeek",
+        "url": "https://boardgamegeek.com/boardgame/438/scotland-yard"
+      }
+    ],
+    "credit": "Satellite version by Typse2Fsat, after the Ravensburger board."
+  }
+}

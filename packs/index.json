@@ -2,17 +2,17 @@
   "packs": [
     {
       "id": "whitechapel",
-      "name": "Whitechapel \u2014 Stay At Home",
+      "name": "Whitechapel — Stay At Home",
       "ref": "packs/whitechapel.json"
     },
     {
       "id": "chess",
-      "name": "Chess \u2014 open table",
+      "name": "Chess — open table",
       "ref": "packs/chess.json"
     },
     {
       "id": "go",
-      "name": "Go \u2014 19\u00d719 goban",
+      "name": "Go — 19×19 goban",
       "ref": "packs/go.json"
     },
     {
@@ -39,6 +39,21 @@
       "id": "gomoku",
       "name": "Gomoku — enforced",
       "ref": "packs/gomoku.json"
+    },
+    {
+      "id": "scotlandyard",
+      "name": "Scotland Yard",
+      "ref": "packs/scotlandyard.json"
+    },
+    {
+      "id": "scotlandyard-original",
+      "name": "Scotland Yard — original board",
+      "ref": "packs/scotlandyard-original.json"
+    },
+    {
+      "id": "scotlandyard-aerial",
+      "name": "Scotland Yard — satellite",
+      "ref": "packs/scotlandyard-aerial.json"
     }
   ]
 }
